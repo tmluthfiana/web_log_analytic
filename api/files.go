@@ -2,6 +2,7 @@ package api
 
 import (
 	"bufio"
+	"fmt"
 	"log"
 	"os"
 	"sort"
@@ -12,12 +13,19 @@ import (
 
 func ProcessDir() string {
 	reader := bufio.NewReader(os.Stdin)
-	text, _ := reader.ReadString('\n')
+	text, err := reader.ReadString('\n')
+	if err != nil {
+		fmt.Println("Failed to Read Dir")
+	}
+
 	stringTemp := strings.Fields(text)
 	dirname := stringTemp[4]
 
 	minTemp := strings.Replace(stringTemp[2], "m", "", -1)
-	minutes, _ := strconv.Atoi(minTemp)
+	minutes, err := strconv.Atoi(minTemp)
+	if err != nil {
+		fmt.Println("Failed to convert int")
+	}
 	result := ProcessFiles(minutes, dirname)
 
 	finalRes := strings.Join(result[:], "\n")
@@ -28,7 +36,10 @@ func ProcessFiles(minutes int, dirname string) []string {
 	now := time.Now()
 	then := now.Add(time.Duration(-minutes) * time.Minute)
 
-	fInfo, _ := ReadDir(dirname)
+	fInfo, err := ReadDir(dirname)
+	if err != nil {
+		fmt.Println("Failed to Read Dir")
+	}
 	var files []os.FileInfo
 	for _, file := range fInfo {
 		if file.ModTime().After(then) {
@@ -62,7 +73,10 @@ func ReadDir(dirname string) ([]os.FileInfo, error) {
 }
 
 func ReadFile(filename string, minutes int) []string {
-	f, _ := os.Open(filename)
+	f, err := os.Open(filename)
+	if err != nil {
+		fmt.Println("Failed to Oper file")
+	}
 	defer f.Close()
 
 	result := []string{}
@@ -75,7 +89,10 @@ func ReadFile(filename string, minutes int) []string {
 
 		tempTime := text2[1]
 		layout := "02/Jan/2006:15:04:05 +0000"
-		times, _ := time.Parse(layout, tempTime)
+		times, err := time.Parse(layout, tempTime)
+		if err != nil {
+			fmt.Println("Failed to convert times")
+		}
 
 		now := time.Now()
 		then := now.Add(time.Duration(-minutes) * time.Minute)
