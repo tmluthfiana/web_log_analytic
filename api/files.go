@@ -2,6 +2,7 @@ package api
 
 import (
 	"bufio"
+	"fmt"
 	"os"
 	"sort"
 	"strconv"
@@ -13,6 +14,7 @@ func ProcessDir() (string, error) {
 	reader := bufio.NewReader(os.Stdin)
 	text, err := reader.ReadString('\n')
 	if err != nil {
+		fmt.Println("Failed to Read Input")
 		return "", err
 	}
 
@@ -22,11 +24,13 @@ func ProcessDir() (string, error) {
 	minTemp := strings.Replace(stringTemp[2], "m", "", -1)
 	minutes, err := strconv.Atoi(minTemp)
 	if err != nil {
+		fmt.Println("Failed to convert int")
 		return "", err
 	}
 
 	result, err := ProcessFiles(dirname, minutes)
 	if err != nil {
+		fmt.Println("Failed to process files")
 		return "", err
 	}
 
@@ -40,6 +44,7 @@ func ProcessFiles(dirname string, minutes int) ([]string, error) {
 
 	fInfo, err := ReadDir(dirname)
 	if err != nil {
+		fmt.Println("Failed to Read Dir")
 		return nil, err
 	}
 	var files []os.FileInfo
@@ -54,6 +59,7 @@ func ProcessFiles(dirname string, minutes int) ([]string, error) {
 		filename := dirname + "/" + file.Name()
 		res, err := ReadFile(filename, minutes)
 		if err != nil {
+			fmt.Println("Failed to Read File")
 			return nil, err
 		}
 
@@ -66,20 +72,25 @@ func ProcessFiles(dirname string, minutes int) ([]string, error) {
 func ReadDir(dirname string) ([]os.FileInfo, error) {
 	f, err := os.Open(dirname)
 	if err != nil {
+		fmt.Println("Failed to Open Dir")
 		return nil, err
 	}
+
 	list, err := f.Readdir(-1)
-	f.Close()
 	if err != nil {
+		fmt.Println("Failed to Read Dir")
 		return nil, err
 	}
-	sort.Slice(list, func(i, j int) bool { return list[i].Name() < list[j].Name() })
+	f.Close()
+
+	sort.Slice(list, func(i, j int) bool { return list[i].ModTime().Before(list[j].ModTime()) })
 	return list, nil
 }
 
 func ReadFile(filename string, minutes int) ([]string, error) {
 	f, err := os.Open(filename)
 	if err != nil {
+		fmt.Println("Failed to Open file")
 		return nil, err
 	}
 	defer f.Close()
@@ -96,6 +107,7 @@ func ReadFile(filename string, minutes int) ([]string, error) {
 		layout := "02/Jan/2006:15:04:05 +0000"
 		times, err := time.Parse(layout, tempTime)
 		if err != nil {
+			fmt.Println("Failed to convert times")
 			return nil, err
 		}
 
