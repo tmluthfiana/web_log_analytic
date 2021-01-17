@@ -10,7 +10,13 @@ import (
 	"time"
 )
 
-func ProcessDir() (string, error) {
+type LogAnalytic struct {
+	Dirname  string
+	Minute   int
+	FileList []os.FileInfo
+}
+
+func Processes() (string, error) {
 	reader := bufio.NewReader(os.Stdin)
 	text, err := reader.ReadString('\n')
 	if err != nil {
@@ -22,15 +28,17 @@ func ProcessDir() (string, error) {
 	dirname := stringTemp[4]
 
 	minTemp := strings.Replace(stringTemp[2], "m", "", -1)
-	minutes, err := strconv.Atoi(minTemp)
+	minute, err := strconv.Atoi(minTemp)
 	if err != nil {
 		fmt.Println("Failed to convert int")
 		return "", err
 	}
 
-	result, err := ProcessFiles(dirname, minutes)
+	var analytic = LogAnalytic{Dirname: dirname, Minute: minute}
+
+	result, err := analytic.ProcessDir()
 	if err != nil {
-		fmt.Println("Failed to process files")
+		fmt.Println("Failed to process")
 		return "", err
 	}
 
@@ -38,15 +46,16 @@ func ProcessDir() (string, error) {
 	return finalRes, nil
 }
 
-func ProcessFiles(dirname string, minutes int) ([]string, error) {
+func (analytic LogAnalytic) ProcessDir() ([]string, error) {
 	now := time.Now()
-	then := now.Add(time.Duration(-minutes) * time.Minute)
+	then := now.Add(time.Duration(-analytic.Minute) * time.Minute)
 
-	fInfo, err := ReadDir(dirname)
+	fInfo, err := analytic.ReadDir()
 	if err != nil {
 		fmt.Println("Failed to Read Dir")
 		return nil, err
 	}
+
 	var files []os.FileInfo
 	for _, file := range fInfo {
 		if file.ModTime().After(then) {
@@ -54,10 +63,22 @@ func ProcessFiles(dirname string, minutes int) ([]string, error) {
 		}
 	}
 
+	analytic.FileList = files
+	result, err := analytic.ProcessFiles()
+	if err != nil {
+		fmt.Println("Failed to Process Files")
+		return nil, err
+	}
+
+	return result, nil
+}
+
+func (analytic LogAnalytic) ProcessFiles() ([]string, error) {
 	result := []string{}
-	for _, file := range files {
-		filename := dirname + "/" + file.Name()
-		res, err := ReadFile(filename, minutes)
+	for _, file := range analytic.FileList {
+		fmt.Println("name", file.Name())
+		fname := analytic.Dirname + "/" + file.Name()
+		res, err := ReadFile(fname, analytic.Minute)
 		if err != nil {
 			fmt.Println("Failed to Read File")
 			return nil, err
@@ -65,12 +86,11 @@ func ProcessFiles(dirname string, minutes int) ([]string, error) {
 
 		result = append(result, res...)
 	}
-
 	return result, nil
 }
 
-func ReadDir(dirname string) ([]os.FileInfo, error) {
-	f, err := os.Open(dirname)
+func (analytic LogAnalytic) ReadDir() ([]os.FileInfo, error) {
+	f, err := os.Open(analytic.Dirname)
 	if err != nil {
 		fmt.Println("Failed to Open Dir")
 		return nil, err
@@ -87,7 +107,7 @@ func ReadDir(dirname string) ([]os.FileInfo, error) {
 	return list, nil
 }
 
-func ReadFile(filename string, minutes int) ([]string, error) {
+func ReadFile(filename string, minute int) ([]string, error) {
 	f, err := os.Open(filename)
 	if err != nil {
 		fmt.Println("Failed to Open file")
@@ -112,7 +132,7 @@ func ReadFile(filename string, minutes int) ([]string, error) {
 		}
 
 		now := time.Now()
-		then := now.Add(time.Duration(-minutes) * time.Minute)
+		then := now.Add(time.Duration(-minute) * time.Minute)
 		if times.After(then) {
 			result = append(result, scanner.Text())
 		}
