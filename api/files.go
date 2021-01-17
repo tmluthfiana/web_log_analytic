@@ -16,6 +16,7 @@ type LogAnalytic struct {
 	FileList []os.FileInfo
 }
 
+// this function use to read input from cli/command line
 func Processes() (string, error) {
 	reader := bufio.NewReader(os.Stdin)
 	text, err := reader.ReadString('\n')
@@ -46,6 +47,7 @@ func Processes() (string, error) {
 	return finalRes, nil
 }
 
+//this function use to process dir(read and get list of log file in range n minutes)
 func (analytic LogAnalytic) ProcessDir() ([]string, error) {
 	now := time.Now()
 	then := now.Add(time.Duration(-analytic.Minute) * time.Minute)
@@ -73,6 +75,7 @@ func (analytic LogAnalytic) ProcessDir() ([]string, error) {
 	return result, nil
 }
 
+// this function used to process file (get n minutes information and save to temp store)
 func (analytic LogAnalytic) ProcessFiles() ([]string, error) {
 	result := []string{}
 	for _, file := range analytic.FileList {
@@ -89,6 +92,7 @@ func (analytic LogAnalytic) ProcessFiles() ([]string, error) {
 	return result, nil
 }
 
+// this function used to oped and read the diresctory and save the information of the directory
 func (analytic LogAnalytic) ReadDir() ([]os.FileInfo, error) {
 	f, err := os.Open(analytic.Dirname)
 	if err != nil {
@@ -108,6 +112,7 @@ func (analytic LogAnalytic) ReadDir() ([]os.FileInfo, error) {
 	return list, nil
 }
 
+// this function use to oped and read the log file
 func (analytic LogAnalytic) ReadFile(filename string) ([]string, error) {
 	f, err := os.Open(filename)
 	if err != nil {

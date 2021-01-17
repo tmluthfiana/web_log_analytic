@@ -7,6 +7,7 @@ import (
 	"github.com/tmluthfiana/web_log_analytic/api"
 )
 
+// test function that get list of lof file in n minutes
 func TestProcessDir(t *testing.T) {
 	dirname := "/Users/triasluthfiana/go/src/github.com/tmluthfiana/web_log_analytic/http-log"
 	minute := 3
@@ -19,6 +20,7 @@ func TestProcessDir(t *testing.T) {
 	}
 }
 
+// test function that get n minutes data from log file
 func TestProcessFiles(t *testing.T) {
 	dirname := "/Users/triasluthfiana/go/src/github.com/tmluthfiana/web_log_analytic/http-log"
 	minute := 10
@@ -38,6 +40,7 @@ func TestProcessFiles(t *testing.T) {
 	}
 }
 
+// this is function to test read a dir
 func TestReadDir(t *testing.T) {
 	dirname := "/Users/triasluthfiana/go/src/github.com/tmluthfiana/web_log_analytic/http-log"
 	var analytic = api.LogAnalytic{Dirname: dirname}
@@ -49,6 +52,7 @@ func TestReadDir(t *testing.T) {
 	}
 }
 
+// this is function to test read a log file
 func TestReadFile(t *testing.T) {
 	filename := "/Users/triasluthfiana/go/src/github.com/tmluthfiana/web_log_analytic/http-log/http-2.log"
 	minute := 3
