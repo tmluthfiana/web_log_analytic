@@ -13,8 +13,7 @@ func TestProcessDir(t *testing.T) {
 	minute := 3
 	var analytic = api.LogAnalytic{Dirname: dirname, Minute: minute}
 
-	response, err := analytic.ProcessDir()
-	t.Log(response)
+	err := analytic.ProcessDir()
 	if err != nil {
 		t.Error("Failed to Process Files")
 	}
@@ -33,9 +32,8 @@ func TestProcessFiles(t *testing.T) {
 	}
 
 	analytic.FileList = append(analytic.FileList, info)
-	response, err := analytic.ProcessFiles()
-	t.Log(response)
-	if err != nil {
+	er := analytic.ProcessFiles()
+	if er != nil {
 		t.Error("Failed to Process Files")
 	}
 }
@@ -58,8 +56,7 @@ func TestReadFile(t *testing.T) {
 	minute := 3
 	var analytic = api.LogAnalytic{Minute: minute}
 
-	response, err := analytic.ReadFile(filename)
-	t.Log(response)
+	err := analytic.ReadFile(filename)
 	if err != nil {
 		t.Error("Failed to Read Files")
 	}

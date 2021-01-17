@@ -21,11 +21,12 @@ type LogAnalytic struct {
 }
 
 // this function use to read input from cli/command line
-func Processes() {
+func Processes() error {
 	reader := bufio.NewReader(os.Stdin)
 	text, err := reader.ReadString('\n')
 	if err != nil {
 		fmt.Println("Failed to Read Input")
+		return err
 	}
 
 	stringTemp := strings.Fields(text)
@@ -35,21 +36,29 @@ func Processes() {
 	minute, err := strconv.Atoi(minTemp)
 	if err != nil {
 		fmt.Println("Failed to convert int")
+		return err
 	}
 
 	var analytic = LogAnalytic{Dirname: dirname, Minute: minute}
 
-	analytic.ProcessDir()
+	er := analytic.ProcessDir()
+	if er != nil {
+		fmt.Println("Failed to process dir")
+		return er
+	}
+
+	return nil
 }
 
 //this function use to process dir(read and get list of log file in range n minutes)
-func (analytic LogAnalytic) ProcessDir() {
+func (analytic LogAnalytic) ProcessDir() error {
 	now := time.Now()
 	then := now.Add(time.Duration(-analytic.Minute) * time.Minute)
 
 	fInfo, err := analytic.ReadDir()
 	if err != nil {
 		fmt.Println("Failed to Read Dir")
+		return err
 	}
 
 	var files []os.FileInfo
@@ -60,23 +69,37 @@ func (analytic LogAnalytic) ProcessDir() {
 	}
 
 	analytic.FileList = files
-	analytic.ProcessFiles()
+	er := analytic.ProcessFiles()
+	if er != nil {
+		fmt.Println("Failed to process file")
+		return er
+	}
+
+	return nil
 }
 
 // this function used to process file (get n minutes information and save to temp store)
-func (analytic LogAnalytic) ProcessFiles() {
+func (analytic LogAnalytic) ProcessFiles() error {
 
 	if len(analytic.FileList) > 0 {
 		fname := analytic.Dirname + PathSeparator + analytic.FileList[0].Name()
-		analytic.CheckFirstFile(fname)
-	} else {
-		fmt.Println("Failed to Process File")
+		err := analytic.CheckFirstFile(fname)
+		if err != nil {
+			fmt.Println("Failed to process file")
+			return err
+		}
+
+		for _, file := range analytic.FileList {
+			fname := analytic.Dirname + PathSeparator + file.Name()
+			err := analytic.ReadFile(fname)
+			if err != nil {
+				fmt.Println("Failed to read file")
+				return err
+			}
+		}
 	}
 
-	for _, file := range analytic.FileList {
-		fname := analytic.Dirname + PathSeparator + file.Name()
-		analytic.ReadFile(fname)
-	}
+	return nil
 }
 
 // this function used to oped and read the diresctory and save the information of the directory
@@ -138,10 +161,11 @@ func (analytic LogAnalytic) CheckFirstFile(filename string) error {
 }
 
 // this function use to oped and read the log file
-func (analytic LogAnalytic) ReadFile(filename string) {
+func (analytic LogAnalytic) ReadFile(filename string) error {
 	f, err := os.Open(filename)
 	if err != nil {
 		fmt.Println("Failed to Open file")
+		return err
 	}
 	defer f.Close()
 
@@ -152,5 +176,8 @@ func (analytic LogAnalytic) ReadFile(filename string) {
 
 	if err := scanner.Err(); err != nil {
 		fmt.Println("Failed read file")
+		return err
 	}
+
+	return nil
 }
