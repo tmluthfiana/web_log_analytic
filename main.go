@@ -7,6 +7,10 @@ import (
 )
 
 func main() {
-	result := api.ProcessDir()
-	fmt.Print(result)
+	result, err := api.ProcessDir()
+	if err != nil {
+		fmt.Print("Failed to Process")
+	} else {
+		fmt.Print(result)
+	}
 }

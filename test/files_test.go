@@ -1,66 +1,39 @@
 package test
 
 import (
-	"bufio"
-	"os"
-	"sort"
-	"strings"
 	"testing"
-	"time"
+
+	"github.com/tmluthfiana/web_log_analytic/api"
 )
+
+func TestProcessFiles(t *testing.T) {
+	dirname := "/Users/triasluthfiana/go/src/github.com/tmluthfiana/web_log_analytic/http-log"
+	minutes := 3
+
+	response, err := api.ProcessFiles(dirname, minutes)
+	t.Log(response)
+	if err != nil {
+		t.Error("Failed to Process Files")
+	}
+}
 
 func TestReadDir(t *testing.T) {
 	dirname := "/Users/triasluthfiana/go/src/github.com/tmluthfiana/web_log_analytic/http-log"
 
-	f, err := os.Open(dirname)
+	response, err := api.ReadDir(dirname)
+	t.Log(response)
 	if err != nil {
-		t.Error("Failed Open Directory")
+		t.Error("Failed to Read Directory")
 	}
-
-	list, err := f.Readdir(-1)
-	f.Close()
-	if err != nil {
-		t.Error("Failed Read Directory")
-	}
-	sort.Slice(list, func(i, j int) bool { return list[i].Name() < list[j].Name() })
-	t.Log(list)
 }
 
 func TestReadFile(t *testing.T) {
 	filename := "/Users/triasluthfiana/go/src/github.com/tmluthfiana/web_log_analytic/http-log/http-2.log"
 	minutes := 3
 
-	f, err := os.Open(filename)
+	response, err := api.ReadFile(filename, minutes)
+	t.Log(response)
 	if err != nil {
-		t.Error("Failed Open File")
+		t.Error("Failed to Read Files")
 	}
-	defer f.Close()
-
-	result := []string{}
-	scanner := bufio.NewScanner(f)
-
-	for scanner.Scan() {
-		r := strings.NewReplacer("[", "&;", "]", "&;")
-		text := r.Replace(scanner.Text())
-		text2 := strings.Split(text, "&;")
-
-		tempTime := text2[1]
-		layout := "02/Jan/2006:15:04:05 +0000"
-		times, err := time.Parse(layout, tempTime)
-		if err != nil {
-			t.Error("Failed Parse Datetime")
-		}
-
-		now := time.Now()
-		then := now.Add(time.Duration(-minutes) * time.Minute)
-		if times.After(then) {
-			result = append(result, scanner.Text())
-		}
-	}
-
-	if err := scanner.Err(); err != nil {
-		t.Error("Failed Open File")
-	}
-
-	t.Log(result)
 }

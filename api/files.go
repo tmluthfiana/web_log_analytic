@@ -2,8 +2,6 @@ package api
 
 import (
 	"bufio"
-	"fmt"
-	"log"
 	"os"
 	"sort"
 	"strconv"
@@ -11,11 +9,11 @@ import (
 	"time"
 )
 
-func ProcessDir() string {
+func ProcessDir() (string, error) {
 	reader := bufio.NewReader(os.Stdin)
 	text, err := reader.ReadString('\n')
 	if err != nil {
-		fmt.Println("Failed to Read Dir")
+		return "", err
 	}
 
 	stringTemp := strings.Fields(text)
@@ -24,21 +22,25 @@ func ProcessDir() string {
 	minTemp := strings.Replace(stringTemp[2], "m", "", -1)
 	minutes, err := strconv.Atoi(minTemp)
 	if err != nil {
-		fmt.Println("Failed to convert int")
+		return "", err
 	}
-	result := ProcessFiles(minutes, dirname)
+
+	result, err := ProcessFiles(dirname, minutes)
+	if err != nil {
+		return "", err
+	}
 
 	finalRes := strings.Join(result[:], "\n")
-	return finalRes
+	return finalRes, nil
 }
 
-func ProcessFiles(minutes int, dirname string) []string {
+func ProcessFiles(dirname string, minutes int) ([]string, error) {
 	now := time.Now()
 	then := now.Add(time.Duration(-minutes) * time.Minute)
 
 	fInfo, err := ReadDir(dirname)
 	if err != nil {
-		fmt.Println("Failed to Read Dir")
+		return nil, err
 	}
 	var files []os.FileInfo
 	for _, file := range fInfo {
@@ -50,12 +52,15 @@ func ProcessFiles(minutes int, dirname string) []string {
 	result := []string{}
 	for _, file := range files {
 		filename := dirname + "/" + file.Name()
-		res := ReadFile(filename, minutes)
+		res, err := ReadFile(filename, minutes)
+		if err != nil {
+			return nil, err
+		}
 
 		result = append(result, res...)
 	}
 
-	return result
+	return result, nil
 }
 
 func ReadDir(dirname string) ([]os.FileInfo, error) {
@@ -72,10 +77,10 @@ func ReadDir(dirname string) ([]os.FileInfo, error) {
 	return list, nil
 }
 
-func ReadFile(filename string, minutes int) []string {
+func ReadFile(filename string, minutes int) ([]string, error) {
 	f, err := os.Open(filename)
 	if err != nil {
-		fmt.Println("Failed to Oper file")
+		return nil, err
 	}
 	defer f.Close()
 
@@ -91,7 +96,7 @@ func ReadFile(filename string, minutes int) []string {
 		layout := "02/Jan/2006:15:04:05 +0000"
 		times, err := time.Parse(layout, tempTime)
 		if err != nil {
-			fmt.Println("Failed to convert times")
+			return nil, err
 		}
 
 		now := time.Now()
@@ -102,8 +107,8 @@ func ReadFile(filename string, minutes int) []string {
 	}
 
 	if err := scanner.Err(); err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 
-	return result
+	return result, nil
 }
