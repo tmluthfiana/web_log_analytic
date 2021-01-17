@@ -2,7 +2,6 @@ package api
 
 import (
 	"bufio"
-	"log"
 	"os"
 	"sort"
 	"strconv"
@@ -10,25 +9,39 @@ import (
 	"time"
 )
 
-func ProcessDir() string {
+func ProcessDir() (string, error) {
 	reader := bufio.NewReader(os.Stdin)
-	text, _ := reader.ReadString('\n')
+	text, err := reader.ReadString('\n')
+	if err != nil {
+		return "", err
+	}
+
 	stringTemp := strings.Fields(text)
 	dirname := stringTemp[4]
 
 	minTemp := strings.Replace(stringTemp[2], "m", "", -1)
-	minutes, _ := strconv.Atoi(minTemp)
-	result := ProcessFiles(minutes, dirname)
+	minutes, err := strconv.Atoi(minTemp)
+	if err != nil {
+		return "", err
+	}
+
+	result, err := ProcessFiles(dirname, minutes)
+	if err != nil {
+		return "", err
+	}
 
 	finalRes := strings.Join(result[:], "\n")
-	return finalRes
+	return finalRes, nil
 }
 
-func ProcessFiles(minutes int, dirname string) []string {
+func ProcessFiles(dirname string, minutes int) ([]string, error) {
 	now := time.Now()
 	then := now.Add(time.Duration(-minutes) * time.Minute)
 
-	fInfo, _ := ReadDir(dirname)
+	fInfo, err := ReadDir(dirname)
+	if err != nil {
+		return nil, err
+	}
 	var files []os.FileInfo
 	for _, file := range fInfo {
 		if file.ModTime().After(then) {
@@ -39,12 +52,15 @@ func ProcessFiles(minutes int, dirname string) []string {
 	result := []string{}
 	for _, file := range files {
 		filename := dirname + "/" + file.Name()
-		res := ReadFile(filename, minutes)
+		res, err := ReadFile(filename, minutes)
+		if err != nil {
+			return nil, err
+		}
 
 		result = append(result, res...)
 	}
 
-	return result
+	return result, nil
 }
 
 func ReadDir(dirname string) ([]os.FileInfo, error) {
@@ -61,8 +77,11 @@ func ReadDir(dirname string) ([]os.FileInfo, error) {
 	return list, nil
 }
 
-func ReadFile(filename string, minutes int) []string {
-	f, _ := os.Open(filename)
+func ReadFile(filename string, minutes int) ([]string, error) {
+	f, err := os.Open(filename)
+	if err != nil {
+		return nil, err
+	}
 	defer f.Close()
 
 	result := []string{}
@@ -75,7 +94,10 @@ func ReadFile(filename string, minutes int) []string {
 
 		tempTime := text2[1]
 		layout := "02/Jan/2006:15:04:05 +0000"
-		times, _ := time.Parse(layout, tempTime)
+		times, err := time.Parse(layout, tempTime)
+		if err != nil {
+			return nil, err
+		}
 
 		now := time.Now()
 		then := now.Add(time.Duration(-minutes) * time.Minute)
@@ -85,8 +107,8 @@ func ReadFile(filename string, minutes int) []string {
 	}
 
 	if err := scanner.Err(); err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 
-	return result
+	return result, nil
 }
