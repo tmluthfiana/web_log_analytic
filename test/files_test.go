@@ -51,9 +51,10 @@ func TestReadDir(t *testing.T) {
 
 func TestReadFile(t *testing.T) {
 	filename := "/Users/triasluthfiana/go/src/github.com/tmluthfiana/web_log_analytic/http-log/http-2.log"
-	minutes := 3
+	minute := 3
+	var analytic = api.LogAnalytic{Minute: minute}
 
-	response, err := api.ReadFile(filename, minutes)
+	response, err := analytic.ReadFile(filename)
 	t.Log(response)
 	if err != nil {
 		t.Error("Failed to Read Files")

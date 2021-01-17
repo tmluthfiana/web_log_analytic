@@ -78,7 +78,7 @@ func (analytic LogAnalytic) ProcessFiles() ([]string, error) {
 	for _, file := range analytic.FileList {
 		fmt.Println("name", file.Name())
 		fname := analytic.Dirname + "/" + file.Name()
-		res, err := ReadFile(fname, analytic.Minute)
+		res, err := analytic.ReadFile(fname)
 		if err != nil {
 			fmt.Println("Failed to Read File")
 			return nil, err
@@ -107,7 +107,7 @@ func (analytic LogAnalytic) ReadDir() ([]os.FileInfo, error) {
 	return list, nil
 }
 
-func ReadFile(filename string, minute int) ([]string, error) {
+func (analytic LogAnalytic) ReadFile(filename string) ([]string, error) {
 	f, err := os.Open(filename)
 	if err != nil {
 		fmt.Println("Failed to Open file")
@@ -132,7 +132,7 @@ func ReadFile(filename string, minute int) ([]string, error) {
 		}
 
 		now := time.Now()
-		then := now.Add(time.Duration(-minute) * time.Minute)
+		then := now.Add(time.Duration(-analytic.Minute) * time.Minute)
 		if times.After(then) {
 			result = append(result, scanner.Text())
 		}
