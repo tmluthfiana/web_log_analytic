@@ -10,6 +10,10 @@ import (
 	"time"
 )
 
+var (
+	PathSeparator string = string(os.PathSeparator)
+)
+
 type LogAnalytic struct {
 	Dirname  string
 	Minute   int
@@ -17,12 +21,11 @@ type LogAnalytic struct {
 }
 
 // this function use to read input from cli/command line
-func Processes() (string, error) {
+func Processes() {
 	reader := bufio.NewReader(os.Stdin)
 	text, err := reader.ReadString('\n')
 	if err != nil {
 		fmt.Println("Failed to Read Input")
-		return "", err
 	}
 
 	stringTemp := strings.Fields(text)
@@ -32,30 +35,21 @@ func Processes() (string, error) {
 	minute, err := strconv.Atoi(minTemp)
 	if err != nil {
 		fmt.Println("Failed to convert int")
-		return "", err
 	}
 
 	var analytic = LogAnalytic{Dirname: dirname, Minute: minute}
 
-	result, err := analytic.ProcessDir()
-	if err != nil {
-		fmt.Println("Failed to process")
-		return "", err
-	}
-
-	finalRes := strings.Join(result[:], "\n")
-	return finalRes, nil
+	analytic.ProcessDir()
 }
 
 //this function use to process dir(read and get list of log file in range n minutes)
-func (analytic LogAnalytic) ProcessDir() ([]string, error) {
+func (analytic LogAnalytic) ProcessDir() {
 	now := time.Now()
 	then := now.Add(time.Duration(-analytic.Minute) * time.Minute)
 
 	fInfo, err := analytic.ReadDir()
 	if err != nil {
 		fmt.Println("Failed to Read Dir")
-		return nil, err
 	}
 
 	var files []os.FileInfo
@@ -66,30 +60,23 @@ func (analytic LogAnalytic) ProcessDir() ([]string, error) {
 	}
 
 	analytic.FileList = files
-	result, err := analytic.ProcessFiles()
-	if err != nil {
-		fmt.Println("Failed to Process Files")
-		return nil, err
-	}
-
-	return result, nil
+	analytic.ProcessFiles()
 }
 
 // this function used to process file (get n minutes information and save to temp store)
-func (analytic LogAnalytic) ProcessFiles() ([]string, error) {
-	result := []string{}
-	for _, file := range analytic.FileList {
-		fmt.Println("name", file.Name())
-		fname := analytic.Dirname + "/" + file.Name()
-		res, err := analytic.ReadFile(fname)
-		if err != nil {
-			fmt.Println("Failed to Read File")
-			return nil, err
-		}
+func (analytic LogAnalytic) ProcessFiles() {
 
-		result = append(result, res...)
+	if len(analytic.FileList) > 0 {
+		fname := analytic.Dirname + PathSeparator + analytic.FileList[0].Name()
+		analytic.CheckFirstFile(fname)
+	} else {
+		fmt.Println("Failed to Process File")
 	}
-	return result, nil
+
+	for _, file := range analytic.FileList {
+		fname := analytic.Dirname + PathSeparator + file.Name()
+		analytic.ReadFile(fname)
+	}
 }
 
 // this function used to oped and read the diresctory and save the information of the directory
@@ -112,16 +99,15 @@ func (analytic LogAnalytic) ReadDir() ([]os.FileInfo, error) {
 	return list, nil
 }
 
-// this function use to oped and read the log file
-func (analytic LogAnalytic) ReadFile(filename string) ([]string, error) {
+// function for checking the first list of log file  n minutes
+func (analytic LogAnalytic) CheckFirstFile(filename string) error {
 	f, err := os.Open(filename)
 	if err != nil {
 		fmt.Println("Failed to Open file")
-		return nil, err
+		return err
 	}
 	defer f.Close()
 
-	result := []string{}
 	scanner := bufio.NewScanner(f)
 
 	for scanner.Scan() {
@@ -134,19 +120,37 @@ func (analytic LogAnalytic) ReadFile(filename string) ([]string, error) {
 		times, err := time.Parse(layout, tempTime)
 		if err != nil {
 			fmt.Println("Failed to convert times")
-			return nil, err
+			return err
 		}
 
 		now := time.Now()
 		then := now.Add(time.Duration(-analytic.Minute) * time.Minute)
 		if times.After(then) {
-			result = append(result, scanner.Text())
+			break
 		}
 	}
 
 	if err := scanner.Err(); err != nil {
-		return nil, err
+		return err
 	}
 
-	return result, nil
+	return nil
+}
+
+// this function use to oped and read the log file
+func (analytic LogAnalytic) ReadFile(filename string) {
+	f, err := os.Open(filename)
+	if err != nil {
+		fmt.Println("Failed to Open file")
+	}
+	defer f.Close()
+
+	scanner := bufio.NewScanner(f)
+	for scanner.Scan() {
+		fmt.Println(scanner.Text())
+	}
+
+	if err := scanner.Err(); err != nil {
+		fmt.Println("Failed read file")
+	}
 }
