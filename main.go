@@ -6,11 +6,6 @@ import (
 	"github.com/tmluthfiana/web_log_analytic/api"
 )
 
-type log_analytic struct {
-	dirname string
-	minute  int
-}
-
 func main() {
 	result, err := api.Processes()
 	if err != nil {

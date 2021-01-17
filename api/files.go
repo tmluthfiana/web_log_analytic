@@ -101,9 +101,10 @@ func (analytic LogAnalytic) ReadDir() ([]os.FileInfo, error) {
 		fmt.Println("Failed to Read Dir")
 		return nil, err
 	}
-	f.Close()
 
 	sort.Slice(list, func(i, j int) bool { return list[i].ModTime().Before(list[j].ModTime()) })
+	f.Close()
+
 	return list, nil
 }
 
