@@ -61,15 +61,3 @@ func TestReadFile(t *testing.T) {
 		t.Error("Failed to Read Files")
 	}
 }
-
-// this is function to test read a dir
-// func TestReadDir(t *testing.T) {
-// 	dirname := "/Users/triasluthfiana/go/src/github.com/tmluthfiana/web_log_analytic/http-log"
-// 	var analytic = api.LogAnalytic{Dirname: dirname}
-
-// 	response, err := analytic.ReadDir()
-// 	t.Log(response)
-// 	if err != nil {
-// 		t.Error("Failed to Read Directory")
-// 	}
-// }

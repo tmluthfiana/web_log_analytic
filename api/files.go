@@ -63,7 +63,9 @@ func (analytic LogAnalytic) ProcessDir() error {
 		}
 
 		if file.ModTime().After(then) {
-			files = append(files, file)
+			if !file.IsDir() {
+				files = append(files, file)
+			}
 		}
 	}
 
@@ -163,23 +165,3 @@ func (analytic LogAnalytic) ReadFile(filename string) error {
 
 	return nil
 }
-
-// this function used to oped and read the diresctory and save the information of the directory
-// func (analytic LogAnalytic) ReadDir() ([]os.FileInfo, error) {
-// 	f, err := os.Open(analytic.Dirname)
-// 	if err != nil {
-// 		fmt.Println("Failed to Open Dir")
-// 		return nil, err
-// 	}
-
-// 	list, err := f.Readdir(-1)
-// 	if err != nil {
-// 		fmt.Println("Failed to Read Dir")
-// 		return nil, err
-// 	}
-
-// 	sort.Slice(list, func(i, j int) bool { return list[i].ModTime().Before(list[j].ModTime()) })
-// 	f.Close()
-
-// 	return list, nil
-// }
