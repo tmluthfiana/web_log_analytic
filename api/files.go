@@ -2,9 +2,10 @@ package api
 
 import (
 	"bufio"
+	"flag"
 	"fmt"
+	"io/ioutil"
 	"os"
-	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -22,25 +23,18 @@ type LogAnalytic struct {
 
 // this function use to read input from cli/command line
 func Processes() error {
-	reader := bufio.NewReader(os.Stdin)
-	text, err := reader.ReadString('\n')
-	if err != nil {
-		fmt.Println("Failed to Read Input")
-		return err
-	}
+	dirname := flag.String("dir", "foo", "to define directory of log files")
+	minTemp := flag.String("t", "3m", "o define max duration of reading")
+	flag.Parse()
 
-	stringTemp := strings.Fields(text)
-	dirname := stringTemp[4]
-
-	minTemp := strings.Replace(stringTemp[2], "m", "", -1)
-	minute, err := strconv.Atoi(minTemp)
+	tempNum := strings.Replace(*minTemp, "m", "", -1)
+	minute, err := strconv.Atoi(tempNum)
 	if err != nil {
 		fmt.Println("Failed to convert int")
 		return err
 	}
 
-	var analytic = LogAnalytic{Dirname: dirname, Minute: minute}
-
+	var analytic = LogAnalytic{Dirname: *dirname, Minute: minute}
 	er := analytic.ProcessDir()
 	if er != nil {
 		fmt.Println("Failed to process dir")
@@ -55,7 +49,7 @@ func (analytic LogAnalytic) ProcessDir() error {
 	now := time.Now()
 	then := now.Add(time.Duration(-analytic.Minute) * time.Minute)
 
-	fInfo, err := analytic.ReadDir()
+	fInfo, err := ioutil.ReadDir(analytic.Dirname)
 	if err != nil {
 		fmt.Println("Failed to Read Dir")
 		return err
@@ -89,7 +83,10 @@ func (analytic LogAnalytic) ProcessFiles() error {
 			return err
 		}
 
-		for _, file := range analytic.FileList {
+		for i, file := range analytic.FileList {
+			if i == 0 {
+				continue
+			}
 			fname := analytic.Dirname + PathSeparator + file.Name()
 			err := analytic.ReadFile(fname)
 			if err != nil {
@@ -100,26 +97,6 @@ func (analytic LogAnalytic) ProcessFiles() error {
 	}
 
 	return nil
-}
-
-// this function used to oped and read the diresctory and save the information of the directory
-func (analytic LogAnalytic) ReadDir() ([]os.FileInfo, error) {
-	f, err := os.Open(analytic.Dirname)
-	if err != nil {
-		fmt.Println("Failed to Open Dir")
-		return nil, err
-	}
-
-	list, err := f.Readdir(-1)
-	if err != nil {
-		fmt.Println("Failed to Read Dir")
-		return nil, err
-	}
-
-	sort.Slice(list, func(i, j int) bool { return list[i].ModTime().Before(list[j].ModTime()) })
-	f.Close()
-
-	return list, nil
 }
 
 // function for checking the first list of log file  n minutes
@@ -146,10 +123,12 @@ func (analytic LogAnalytic) CheckFirstFile(filename string) error {
 			return err
 		}
 
-		now := time.Now()
+		now := time.Now().UTC()
 		then := now.Add(time.Duration(-analytic.Minute) * time.Minute)
 		if times.After(then) {
-			break
+			fmt.Println(scanner.Text())
+		} else {
+			continue
 		}
 	}
 
@@ -181,3 +160,23 @@ func (analytic LogAnalytic) ReadFile(filename string) error {
 
 	return nil
 }
+
+// this function used to oped and read the diresctory and save the information of the directory
+// func (analytic LogAnalytic) ReadDir() ([]os.FileInfo, error) {
+// 	f, err := os.Open(analytic.Dirname)
+// 	if err != nil {
+// 		fmt.Println("Failed to Open Dir")
+// 		return nil, err
+// 	}
+
+// 	list, err := f.Readdir(-1)
+// 	if err != nil {
+// 		fmt.Println("Failed to Read Dir")
+// 		return nil, err
+// 	}
+
+// 	sort.Slice(list, func(i, j int) bool { return list[i].ModTime().Before(list[j].ModTime()) })
+// 	f.Close()
+
+// 	return list, nil
+// }

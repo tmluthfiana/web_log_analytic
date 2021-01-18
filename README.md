@@ -6,8 +6,8 @@
 
 # usage
 - run it on local go run main.go
-- use this command line input : analytics -t <mins>m -d <dir>
-- example : analytics -t 3m -d /Users/triasluthfiana/go/src/github.com/tmluthfiana/web_log_analytic/http-log
+- use this command line input : go run main.go -t <mins>m -d <dir>
+- example : go run main.go -t 3m -d /Users/triasluthfiana/go/src/github.com/tmluthfiana/web_log_analytic/http-log
 
 # testing
 - running file test in test folder with : go test -v -run (function name). example : go test -v -run TestProcessDir
