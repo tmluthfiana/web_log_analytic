@@ -50,6 +50,18 @@ func TestReadDir(t *testing.T) {
 	}
 }
 
+// test check first file
+func TestCheckFirstFile(t *testing.T) {
+	filename := "/Users/triasluthfiana/go/src/github.com/tmluthfiana/web_log_analytic/http-log/http-2.log"
+	minute := 3
+	var analytic = api.LogAnalytic{Minute: minute}
+
+	err := analytic.CheckFirstFile(filename)
+	if err != nil {
+		t.Error("Failed to Read Files")
+	}
+}
+
 // this is function to test read a log file
 func TestReadFile(t *testing.T) {
 	filename := "/Users/triasluthfiana/go/src/github.com/tmluthfiana/web_log_analytic/http-log/http-2.log"
