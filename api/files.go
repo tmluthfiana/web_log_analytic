@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -57,6 +58,10 @@ func (analytic LogAnalytic) ProcessDir() error {
 
 	var files []os.FileInfo
 	for _, file := range fInfo {
+		if filepath.Ext(file.Name()) != ".log" {
+			continue
+		}
+
 		if file.ModTime().After(then) {
 			files = append(files, file)
 		}
@@ -76,22 +81,20 @@ func (analytic LogAnalytic) ProcessDir() error {
 func (analytic LogAnalytic) ProcessFiles() error {
 
 	if len(analytic.FileList) > 0 {
-		fname := analytic.Dirname + PathSeparator + analytic.FileList[0].Name()
-		err := analytic.CheckFirstFile(fname)
-		if err != nil {
-			fmt.Println("Failed to process file")
-			return err
-		}
-
 		for i, file := range analytic.FileList {
-			if i == 0 {
-				continue
-			}
 			fname := analytic.Dirname + PathSeparator + file.Name()
-			err := analytic.ReadFile(fname)
-			if err != nil {
-				fmt.Println("Failed to read file")
-				return err
+			if i == 0 {
+				err := analytic.CheckFirstFile(fname)
+				if err != nil {
+					fmt.Println("Failed to process file")
+					return err
+				}
+			} else {
+				err := analytic.ReadFile(fname)
+				if err != nil {
+					fmt.Println("Failed to read file")
+					return err
+				}
 			}
 		}
 	}
