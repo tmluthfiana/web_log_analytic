@@ -10,7 +10,8 @@
 - example : go run main.go -t 3m -d /Users/triasluthfiana/go/src/github.com/tmluthfiana/web_log_analytic/http-log
 
 # testing
-- running file test in test folder with : go test -v -run (function name). example : go test -v -run TestProcessDir
+- adjust dirname or filename for test based on your file path
+- running file test in api folder with : go test -v -run (function name). example : go test -v -run TestProcessDir
 
 
 		

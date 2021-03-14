@@ -58,6 +58,7 @@ func (analytic LogAnalytic) ProcessDir() error {
 
 	var files []os.FileInfo
 	for _, file := range fInfo {
+
 		if filepath.Ext(file.Name()) != ".log" {
 			continue
 		}
@@ -85,6 +86,7 @@ func (analytic LogAnalytic) ProcessFiles() error {
 	if len(analytic.FileList) > 0 {
 		for i, file := range analytic.FileList {
 			fname := analytic.Dirname + PathSeparator + file.Name()
+
 			if i == 0 {
 				err := analytic.CheckFirstFile(fname)
 				if err != nil {

@@ -1,4 +1,4 @@
-package test
+package api_test
 
 import (
 	"os"
@@ -9,7 +9,7 @@ import (
 
 // test function that get list of lof file in n minutes
 func TestProcessDir(t *testing.T) {
-	dirname := "/Users/triasluthfiana/go/src/github.com/tmluthfiana/web_log_analytic/http-log"
+	dirname := "/Users/triasluthfiana/go/src/github.com/tmluthfiana/http-log"
 	minute := 3
 	var analytic = api.LogAnalytic{Dirname: dirname, Minute: minute}
 
@@ -21,11 +21,11 @@ func TestProcessDir(t *testing.T) {
 
 // test function that get n minutes data from log file
 func TestProcessFiles(t *testing.T) {
-	dirname := "/Users/triasluthfiana/go/src/github.com/tmluthfiana/web_log_analytic/http-log"
+	dirname := "/Users/triasluthfiana/go/src/github.com/tmluthfiana/http-log"
 	minute := 10
 	var analytic = api.LogAnalytic{Dirname: dirname, Minute: minute}
 
-	filename := "/Users/triasluthfiana/go/src/github.com/tmluthfiana/web_log_analytic/http-log/http-2.log"
+	filename := "/Users/triasluthfiana/go/src/github.com/tmluthfiana/http-log/http-2.log"
 	info, err := os.Stat(filename)
 	if err != nil {
 		t.Error("file does not exist")
@@ -40,7 +40,7 @@ func TestProcessFiles(t *testing.T) {
 
 // test check first file
 func TestCheckFirstFile(t *testing.T) {
-	filename := "/Users/triasluthfiana/go/src/github.com/tmluthfiana/web_log_analytic/http-log/http-2.log"
+	filename := "/Users/triasluthfiana/go/src/github.com/tmluthfiana/http-log/http-2.log"
 	minute := 3
 	var analytic = api.LogAnalytic{Minute: minute}
 
@@ -52,7 +52,7 @@ func TestCheckFirstFile(t *testing.T) {
 
 // this is function to test read a log file
 func TestReadFile(t *testing.T) {
-	filename := "/Users/triasluthfiana/go/src/github.com/tmluthfiana/web_log_analytic/http-log/http-2.log"
+	filename := "/Users/triasluthfiana/go/src/github.com/tmluthfiana/http-log/http-2.log"
 	minute := 3
 	var analytic = api.LogAnalytic{Minute: minute}
 
