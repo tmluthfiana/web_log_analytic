@@ -2,89 +2,119 @@ package api
 
 import (
 	"bufio"
+	"flag"
+	"fmt"
+	"io/ioutil"
 	"os"
-	"sort"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
 )
 
-func ProcessDir() (string, error) {
-	reader := bufio.NewReader(os.Stdin)
-	text, err := reader.ReadString('\n')
-	if err != nil {
-		return "", err
-	}
+var (
+	PathSeparator string = string(os.PathSeparator)
+)
 
-	stringTemp := strings.Fields(text)
-	dirname := stringTemp[4]
-
-	minTemp := strings.Replace(stringTemp[2], "m", "", -1)
-	minutes, err := strconv.Atoi(minTemp)
-	if err != nil {
-		return "", err
-	}
-
-	result, err := ProcessFiles(dirname, minutes)
-	if err != nil {
-		return "", err
-	}
-
-	finalRes := strings.Join(result[:], "\n")
-	return finalRes, nil
+type LogAnalytic struct {
+	Dirname  string
+	Minute   int
+	FileList []os.FileInfo
 }
 
-func ProcessFiles(dirname string, minutes int) ([]string, error) {
-	now := time.Now()
-	then := now.Add(time.Duration(-minutes) * time.Minute)
+// this function use to read input from cli/command line
+func Processes() error {
+	dirname := flag.String("dir", "foo", "to define directory of log files")
+	minTemp := flag.String("t", "3m", "o define max duration of reading")
+	flag.Parse()
 
-	fInfo, err := ReadDir(dirname)
+	tempNum := strings.Replace(*minTemp, "m", "", -1)
+	minute, err := strconv.Atoi(tempNum)
 	if err != nil {
-		return nil, err
+		fmt.Println("Failed to convert int")
+		return err
 	}
+
+	var analytic = LogAnalytic{Dirname: *dirname, Minute: minute}
+	er := analytic.ProcessDir()
+	if er != nil {
+		fmt.Println("Failed to process dir")
+		return er
+	}
+
+	return nil
+}
+
+//this function use to process dir(read and get list of log file in range n minutes)
+func (analytic LogAnalytic) ProcessDir() error {
+	now := time.Now()
+	then := now.Add(time.Duration(-analytic.Minute) * time.Minute)
+
+	fInfo, err := ioutil.ReadDir(analytic.Dirname)
+	if err != nil {
+		fmt.Println("Failed to Read Dir")
+		return err
+	}
+
 	var files []os.FileInfo
 	for _, file := range fInfo {
+
+		if filepath.Ext(file.Name()) != ".log" {
+			continue
+		}
+
 		if file.ModTime().After(then) {
-			files = append(files, file)
+			if !file.IsDir() {
+				files = append(files, file)
+			}
 		}
 	}
 
-	result := []string{}
-	for _, file := range files {
-		filename := dirname + "/" + file.Name()
-		res, err := ReadFile(filename, minutes)
-		if err != nil {
-			return nil, err
+	analytic.FileList = files
+	er := analytic.ProcessFiles()
+	if er != nil {
+		fmt.Println("Failed to process file")
+		return er
+	}
+
+	return nil
+}
+
+// this function used to process file (get n minutes information and save to temp store)
+func (analytic LogAnalytic) ProcessFiles() error {
+
+	if len(analytic.FileList) > 0 {
+		for i, file := range analytic.FileList {
+			fname := analytic.Dirname + PathSeparator + file.Name()
+
+			if i == 0 {
+				err := analytic.CheckFirstFile(fname)
+				if err != nil {
+					fmt.Println("Failed to process file")
+					return err
+				}
+			} else {
+				err := analytic.ReadFile(fname)
+				if err != nil {
+					fmt.Println("Failed to read file")
+					return err
+				}
+			}
 		}
-
-		result = append(result, res...)
 	}
 
-	return result, nil
+	return nil
 }
 
-func ReadDir(dirname string) ([]os.FileInfo, error) {
-	f, err := os.Open(dirname)
-	if err != nil {
-		return nil, err
-	}
-	list, err := f.Readdir(-1)
-	f.Close()
-	if err != nil {
-		return nil, err
-	}
-	sort.Slice(list, func(i, j int) bool { return list[i].Name() < list[j].Name() })
-	return list, nil
-}
-
-func ReadFile(filename string, minutes int) ([]string, error) {
+// function for checking the first list of log file  n minutes
+func (analytic LogAnalytic) CheckFirstFile(filename string) error {
 	f, err := os.Open(filename)
 	if err != nil {
-		return nil, err
+		fmt.Println("Failed to Open file")
+		return err
 	}
 	defer f.Close()
 
-	result := []string{}
 	scanner := bufio.NewScanner(f)
 
 	for scanner.Scan() {
@@ -96,19 +126,44 @@ func ReadFile(filename string, minutes int) ([]string, error) {
 		layout := "02/Jan/2006:15:04:05 +0000"
 		times, err := time.Parse(layout, tempTime)
 		if err != nil {
-			return nil, err
+			fmt.Println("Failed to convert times")
+			return err
 		}
 
-		now := time.Now()
-		then := now.Add(time.Duration(-minutes) * time.Minute)
+		now := time.Now().UTC()
+		then := now.Add(time.Duration(-analytic.Minute) * time.Minute)
 		if times.After(then) {
-			result = append(result, scanner.Text())
+			fmt.Println(scanner.Text())
+		} else {
+			continue
 		}
 	}
 
 	if err := scanner.Err(); err != nil {
-		return nil, err
+		return err
 	}
 
-	return result, nil
+	return nil
+}
+
+// this function use to oped and read the log file
+func (analytic LogAnalytic) ReadFile(filename string) error {
+	f, err := os.Open(filename)
+	if err != nil {
+		fmt.Println("Failed to Open file")
+		return err
+	}
+	defer f.Close()
+
+	scanner := bufio.NewScanner(f)
+	for scanner.Scan() {
+		fmt.Println(scanner.Text())
+	}
+
+	if err := scanner.Err(); err != nil {
+		fmt.Println("Failed read file")
+		return err
+	}
+
+	return nil
 }
